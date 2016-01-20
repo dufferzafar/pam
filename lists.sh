@@ -70,6 +70,24 @@ list_pipsi_packages() {
 
 ######################################################################
 
+# Get all executables in $PATH and the package that they came from
+list_bins_on_path() {
+    # Iterate over every file in $PATH
+    echo -n $PATH \
+    | xargs -d : -I {} find {} -maxdepth 1 -executable \
+    | while read file; do
+        if [[ -f $file ]]; then
+            echo $file
+            dpkg -S $file
+        fi
+    done
+
+    # For zsh!
+    # whence -pm '*'
+}
+
+######################################################################
+
 lists_dir="/mnt/OS/#Storage/Backup/ubuntu/lists"
 
 list_ppa              > $lists_dir/ppa.sh
@@ -78,3 +96,4 @@ list_npm_packages     > $lists_dir/npm-packages.txt
 list_py_packages 2.7  > $lists_dir/py-27-packages.txt
 list_py_packages 3    > $lists_dir/py-34-packages.txt
 list_pipsi_packages   > $lists_dir/pipsi-packages.txt
+list_bins_on_path     > $lists_dir/bins-on-path.txt
