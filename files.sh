@@ -1,44 +1,115 @@
 # Make sure the backup directory exists
-dir="/mnt/OS/#Storage/Backup/tree/"
-mkdir -p $dir
+homebk="/mnt/OS/#Storage/Backup/ubuntu/home"
+files="/mnt/OS/#Storage/Backup/ubuntu/files"
+
+mkdir -p $files
+mkdir -p $homebk
+
+# The tar command
+tar="tar -cpf"
 
 # echo the commands being executed
 set -x
 
 ############################################################## /
 
-# etc
-tar -cf $dir/etc.tar -C / etc
+back_root() {
+    # etc
+    $tar $files/etc.tar -C / etc
 
-# bin - folders in $PATH
-tar -cf $dir/bin.tar -C / bin sbin usr/bin usr/sbin usr/local/sbin usr/local/bin
+    # bin - folders in $PATH
+    $tar $files/binaries.tar -C / bin sbin usr/bin usr/sbin usr/local/sbin usr/local/bin
 
-# Apache2
-tar -cf $dir/apache2.tar -C / etc/apache2 var/www
+    # Apache2
+    $tar $files/apache2.tar -C / etc/apache2 var/www
+}
 
 ############################################################## /usr
 
-# Python packages
-tar -cf $dir/python-27-packages.tar /usr/local/lib/python2.7
-tar -cf $dir/python-34-packages.tar /usr/local/lib/python3.4
+back_usr() {
+    # Python packages
+    $tar $files/python_27_packages.tar -C / usr/local/lib/python2.7/dist-packages usr/lib/python2.7/dist-packages
+    $tar $files/python_34_packages.tar -C / usr/local/lib/python3.4/dist-packages usr/lib/python3/dist-packages usr/lib/python3.4/dist-packages usr/lib/dist-python
+
+    # Node Modules
+    $tar $files/node_modules.tar -C / usr/lib/node_modules
+}
 
 ############################################################# /home
 
-# Desktop Files
-hom=home/dufferzafar
-tar -cf $dir/desktop-files.tar -C / $hom/.local/share/applications/
+back_home() {
+    # Desktop Files
+    hom=home/dufferzafar
 
-# .cache - I am pretty stingy when it comes to downloaded stuff
-cache=$hom/.cache
-tar -cf $dir/home-cache.tar -C / $cache/bower $cache/pip $hom/.npm
+    # .cache - I am pretty stingy when it comes to downloaded stuff
+    cache=$hom/.cache
+    $tar $homebk/cache.tar -C / $cache/bower $cache/pip $hom/.npm
 
-# Languages stuff
-tar -cf $dir/home-cache-languages.tar -C / $hom/.go $cache/.rvm $hom/.gem
+    #########################
 
-# .config
-tar -cf $dir/home-misc.tar -C / $hom/.purple $hom/.zotero $hom/nltk_data
-tar -cf $dir/home-config-others.tar -C / $hom/.vim $hom/.oh-my-zsh $hom/.dotfiles $hom/.ssh $hom/.fonts $hom/.net $hom/.js $hom/.css
-tar -cf $dir/home-config.tar -C / $hom/.config
+    # pipsi packages
+    $tar $homebk/pipsi.tar -C / $hom/.local/venvs $hom/.local/bin
 
-# Backup all 1 level files whose names start with '.'
-tar -cf $dir/home-files.tar "$(find "$HOME" -maxdepth 1 -type f -name "\.*")"
+    #########################
+
+    # Languages stuff
+    $tar $homebk/cache_languages.tar -C / $hom/.go $hom/.rvm $hom/.gem
+
+    #########################
+
+    # Configurations
+    # FoI: sublime-text-3, terminator
+    $tar $homebk/config.tar -C / $hom/.config
+    $tar $homebk/desktop_files.tar -C / $hom/.local/share/applications/
+
+    #########################
+
+    # Backup all 1 level files whose names start with '.'
+    $tar $homebk/dotted_files.tar $(find "$HOME" -maxdepth 1 -type f -name "\.*")
+
+    #########################
+
+    # ~/.apps contains custom installed applications
+    $tar $homebk/apps.tar -C / $hom/.apps
+
+    #########################
+
+    # Other folders
+    $tar $homebk/research.tar -C / $hom/research
+    $tar $homebk/movies.tar -C / $hom/Movies
+
+    rsync -auh --info=progress2 ~/Downloads $homebk
+    rsync -auh --info=progress2 ~/Videos $homebk
+    rsync -auh --info=progress2 ~/Documents $homebk
+
+    #########################
+
+    # Everything but...
+
+    # FoI:
+    # .dotfiles, .vim, .oh-my-zsh, .ssh
+    # .js, .css, .fonts
+    $tar $homebk/everything.tar -C / $hom \
+        --exclude="dev" \
+        --exclude="Downloads" \
+        --exclude="Documents" \
+        --exclude="Movies" \
+        --exclude="research" \
+        --exclude="Videos" \
+        --exclude=".apps" \
+        --exclude=".cache" \
+        --exclude=".codeintel" \
+        --exclude=".config" \
+        --exclude=".local" \
+        --exclude=".mozilla" \
+        --exclude=".rvm" \
+        --exclude=".npm" \
+        --exclude=".go" \
+        --exclude=".wine"
+}
+
+############################################################# Run!
+
+back_root
+back_usr
+back_home
