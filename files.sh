@@ -78,10 +78,6 @@ back_home() {
     $tar $homebk/research.tar -C / $hom/research
     $tar $homebk/movies.tar -C / $hom/Movies
 
-    rsync -auh --info=progress2 ~/Downloads $homebk
-    rsync -auh --info=progress2 ~/Videos $homebk
-    rsync -auh --info=progress2 ~/Documents $homebk
-
     #########################
 
     # Everything but...
@@ -106,6 +102,21 @@ back_home() {
         --exclude=".npm" \
         --exclude=".go" \
         --exclude=".wine"
+
+    #########################
+
+    $tar $homebk/home_git.tar -C /
+        $hom/.dotfiles \
+        $hom/.oh-my-zsh \
+        $hom/.css \
+        $hom/.js
+}
+
+back_home_rsync() {
+    rsync -auh --info=progress2 ~/Downloads $homebk
+    rsync -auh --info=progress2 ~/Videos $homebk
+    rsync -auh --info=progress2 ~/Documents $homebk
+    rsync -auh --info=progress2 ~/Music $homebk
 }
 
 ############################################################# Run!
@@ -113,3 +124,4 @@ back_home() {
 back_root
 back_usr
 back_home
+back_home_rsync
