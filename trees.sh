@@ -1,4 +1,4 @@
-tree_dir="/mnt/OS/#Storage/Backup/tree/"$(date +%F)
+tree_dir="/mnt/OS/#Storage/Backup/ubuntu/trees/"$(date +%F)
 
 mkdir -p $tree_dir
 
@@ -18,3 +18,8 @@ gen_tree /mnt/Entertainment entertainment.tree
 gen_tree /mnt/OS os.tree
 gen_tree /mnt/Stuff stuff.tree
 gen_tree /mnt/Work work.tree
+
+# Root
+echo "/ >" $tree_dir/root.tree
+tree / --dirsfirst --noreport -h -I "home|mnt" > $tree_dir/root.tree
+7z a -mx=9 $tree_dir/root.tree.7z $tree_dir/root.tree
